@@ -96,3 +96,6 @@ uv.lock
 # Scratch
 scratch/
 *scratch*
+
+# Untitled files
+*Untitled*
