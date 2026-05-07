@@ -1,0 +1,87 @@
+[project]
+name = "iam-rtm-compare"
+readme = "README.md"
+version = "0.1.0"
+
+requires-python = ">=3.12"
+dependencies = [
+    "bokeh>=3.8.2",
+    "branca>=0.8.2",
+    "cartopy>=0.25.0",
+    "cdsapi>=0.7.7",
+    "cmocean>=4.0.3",
+    "coiled>=1.120.0",
+    "dask>=2026.1.2",
+    "distributed>=2024.8.0",
+    "flox>=0.11.1",
+    "folium>=0.20.0",
+    "gcsfs>=2026.2.0",
+    "geopandas>=1.1.2",
+    "h5netcdf>=1.7.3",
+    "icechunk>=1.1.5",
+    "ipykernel>=6.30.1",
+    "jupyterlab>=4.5.4",
+    "mapclassify>=2.10.0",
+    "matplotlib>=3.10.7",
+    "netcdf4>=1.7.3",
+    "obstore>=0.8.2",
+    "parquet>=1.3.1",
+    "pyarrow>=23.0.1",
+    "rioxarray>=0.19.0",
+    "s3fs>=2025.9.0",
+    "scipy>=1.16.3",
+    "toml>=0.10.2",
+    "xarray[accel]",
+    "zarr>=2.18.2",
+] 
+
+[tool.uv]
+package = false
+
+[project.optional-dependencies]
+test = [
+    "mypy",
+    "pre-commit",
+    "ruff"
+]
+
+[tool.mypy]
+show_error_codes = true
+
+
+
+[tool.ruff]
+# Same as Black.
+line-length = 88
+indent-width = 4
+target-version = "py39"
+
+exclude = [
+    ".eggs"]
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select = ["E4", "E7", "E9", "F", "I"]
+per-file-ignores = {}
+
+# E402: module level import not at top of file
+# E731: do not assign a lambda expression, use a def
+# W503: line break before binary operator - not implimeted by ruff due to conflict with PEP8.
+
+ignore = ["E402", "E731"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+# Respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Automatically detect the appropriate line ending.
+line-ending = "auto"
