@@ -24,14 +24,42 @@ import matplotlib.pyplot as plt
 from ew_workflows import batch_helperFxns as bhf
 # ---
 
-# %% 
+# %%
+# *************************************************************** #
+# --- set version (tracks soil/model inputs; independent of site strategy)
+this_version = "v1"           # PmE runoff; pw pH 15-30cm;
+# this_version = "v2"             # as v1 but max tPh = 7.0;
+# this_version = "v3"           # as v1 but soilCO2 is doubled;
+# this_version = "v1colombia"   # all sites have colombia spinup inputs
+
+# --- set site strategy
+# SITE_STRATEGY = "largest_cropland"      # original densest-ag-region sites
+# SITE_STRATEGY = "wettestSite"           # wettest P-E cell per GCAM region
+SITE_STRATEGY = "wettestSite_crop25pct"  # wettest P-E cell with ≥25% cropland
+
+SITE_DATASETS = {
+    "largest_cropland": {
+        "parquet": "s3://carbonplan-carbon-removal/ew-workflows-data/valdation-data/sampled_locations_updated.parquet",
+        "zarr_dir": "s3://carbonplan-carbon-removal/ew-workflows-data/gcam/gcam-era5-zarr/",
+    },
+    "wettestSite": {
+        "parquet": "s3://carbonplan-carbon-removal/ew-workflows-data/valdation-data/sampled_locations_wettestSite.parquet",
+        "zarr_dir": "s3://carbonplan-carbon-removal/ew-workflows-data/gcam/gcam-era5-wettestSite-zarr/",
+    },
+    "wettestSite_crop25pct": {
+        "parquet": "s3://carbonplan-carbon-removal/ew-workflows-data/valdation-data/sampled_locations_wettestSite_crop25pct.parquet",
+        "zarr_dir": "s3://carbonplan-carbon-removal/ew-workflows-data/gcam/gcam-era5-wettestSite_crop25pct-zarr/",
+    },
+}
+# *************************************************************** #
+#
 # --- read in parquet data
-spin_parquet = 's3://carbonplan-carbon-removal/ew-workflows-data/valdation-data/sampled_locations_updated.parquet'
+spin_parquet = SITE_DATASETS[SITE_STRATEGY]["parquet"]
 rtgdf = gpd.read_parquet(spin_parquet)
 # rtgdf.columns
 
 # --- read in zarr
-datpath = "s3://carbonplan-carbon-removal/ew-workflows-data/gcam/gcam-era5-zarr/"
+datpath = SITE_DATASETS[SITE_STRATEGY]["zarr_dir"]
 year_range = [2000, 2024]
 ann_datasets = []
 for year in range(year_range[0], year_range[1]+1):
@@ -149,8 +177,13 @@ dfx = dfx.assign(
 )
 
 # %% 
+# --- [version specific updates]
+if this_version == "v2":
+    dfx['tph'] = dfx['tph'].clip(upper=7.0)
+if this_version == "v3": 
+    dfx['tsoilco2'] = dfx['tsoilco2'] + np.log10(2)   # add log10(2) to double soil CO2
 # --- add constants and non-numerics
-dfx['aws_bucket'] = "s3://carbonplan-carbon-removal/SCEPTER/scepter_output/spinups/gcam/v1/"
+dfx['aws_bucket'] = f"s3://carbonplan-carbon-removal/SCEPTER/scepter_output/spinups/gcam/{this_version}_{SITE_STRATEGY}/"
 dfx['aws_save'] = "move"  # ["move", "copy", None] whether to "move" file to aws, just copy it, or nothing at all
 dfx['tunespin_timeout'] = 60*60*48   # [s] time before we give up on a tunespin run (7200 is 120*60 = 2 hours)
 dfx['scepter_exec_name'] = "scepter" # (note scepter_richards maybe not yet working w/ tunespin script --- need to update frame.in)
@@ -165,10 +198,10 @@ dfx['spinname'] = (
 # %% 
 # --- save result -----------------------------------------------------------------------
 savepath_batch = "s3://carbonplan-carbon-removal/ew-workflows-data/scepter/batch/"
-fn = "spinup_gcam_v1.csv"
+fn = f"spinup_gcam_{this_version}_{SITE_STRATEGY}.csv"
 multi_run_split = False   # whether to split the csv into multiple files
 max_iters_per_set = 20    # [int] the number of runs per csv (only used if multi_run_split is True)
 bhf.save_df(dfx, savepath_batch, fn, multi_run_split, max_iters_per_set)
 # ---------------------------------------------------------------------------------------
-
+print(fn)
 # %%

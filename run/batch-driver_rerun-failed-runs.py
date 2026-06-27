@@ -60,6 +60,17 @@ print(f"Read {len(df)} rows from {bucket_dir}/{args.batchName}")
 
 # %%
 # --- identify failed/incomplete runs -------------------
+# Resolve run ID column: prefer params, then fall back to CSV column detection
+run_id_col = params.get("run-id-col", None)
+run_id_suffix = params.get("run-id-suffix", "")
+if run_id_col is None:
+    if 'newrun_id' in df.columns:
+        pass  # let find_failed_or_stale_runs use its default logic
+    elif 'spinname' in df.columns:
+        run_id_col = 'spinname'
+    else:
+        raise ValueError("CSV must contain a 'newrun_id' or 'spinname' column to identify runs")
+
 df = chf.find_failed_or_stale_runs(
         df_batch = df,
         multiyear = params.get("multiyear", False),
@@ -69,7 +80,9 @@ df = chf.find_failed_or_stale_runs(
         check_results_fn = params.get("check_results_fn", "check_results.res"),
         check_logs_fn = params.get("check_logs_fn", "check_logs.res"),
         duration_threshold_frac = params.get("duration_threshold_frac", 0.2),
-        skip_duration_check = params.get("skip_duration_check", False)
+        skip_duration_check = params.get("skip_duration_check", False),
+        run_id_col = run_id_col,
+        run_id_suffix = run_id_suffix,
 )
 
 df_rerun = df[df['rerun_needed'] == True]
