@@ -51,14 +51,13 @@ VARIABLES_accum = VARIABLES_accum_nonE + VARIABLES_accum_E
 VARIABLES_other = ["swvl1", "swvl2", "swvl3"]
 VARIABLES_all = VARIABLES_accum_nonE + VARIABLES_accum_E + VARIABLES_other
 
-# Output directory
-OUT_DIR = Path("era5_infiltration_output")
-OUT_DIR.mkdir(exist_ok=True)
+# Output directory (override with ERA5_OUT_DIR)
+OUT_DIR = Path(os.environ.get("ERA5_OUT_DIR", Path.home() / "Downloads" / "tmp-era5"))
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Earth Data Hub ERA5-Land Zarr URL
-atoken = "edh_pat_5006183c5b85f3a21566968ca1710fe2f600be9e71841e2f750adeb4ee818ae35b2595d1d470d641df0560f317133278"
 EDH_URL = (
-    f"https://edh:{atoken}@data.earthdatahub.destine.eu"
+    "https://data.earthdatahub.destine.eu"
     "/era5/reanalysis-era5-land-no-antartica-v0.zarr"
 )
 
@@ -114,7 +113,6 @@ for var in VARIABLES_accum_E:
 # --- annual means
 last_complete_year = 2007
 annual_datasets = []
-OUT_DIR = "/Users/tylerkukla/Downloads/tmp-era5"
 for year, ds_year in ds.groupby("valid_time.year"):
     print(f"Computing annual stats for {year} ...")
 
@@ -148,7 +146,6 @@ for year, ds_year in ds.groupby("valid_time.year"):
 # %%
 # --- read in data to combine
 annual_datasets = []
-OUT_DIR = "/Users/tylerkukla/Downloads/tmp-era5"
 for year, ds_year in ds.groupby("valid_time.year"):
    tmpds = xr.open_zarr(os.path.join(OUT_DIR, f"era5_sites_{year}.zarr"))
    annual_datasets.append(tmpds)

@@ -77,9 +77,8 @@ OUT_S3_DIR = (
 )
 
 # Earth Data Hub ERA5-Land Zarr URL
-atoken = "edh_pat_5006183c5b85f3a21566968ca1710fe2f600be9e71841e2f750adeb4ee818ae35b2595d1d470d641df0560f317133278"
 EDH_URL = (
-    f"https://edh:{atoken}@data.earthdatahub.destine.eu"
+    "https://data.earthdatahub.destine.eu"
     "/era5/reanalysis-era5-land-no-antartica-v0.zarr"
 )
 

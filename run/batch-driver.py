@@ -7,6 +7,7 @@ Usage:
 Example:
   uv run python3 batch-driver.py _test-batch-n6.csv singlerun
   uv run python3 batch-driver.py _test-batch-richards-n6.csv singlerun
+  uv run python3 batch-driver.py _test-batch-n6.csv singlerun --bleed-delay <seconds>   #(to delay between batches)
 
 Where <batchName> is the CSV filename (in S3 under batch-input-dir configured in local_coiled.py)
 and <paramName> is the key name of a dictionary in inputs/scepter/params/local_coiled.py.
@@ -17,10 +18,11 @@ This script will:
  - create one per-row dict, and submit via coiled.batch.run with map_over_task_var_dicts
  - set TASK_INPUT_KEYS and SAVE_DIR job-level env vars so the worker knows where to persist
 """
-# %% 
+# %%
 import argparse
 import pandas as pd
 import os
+import time
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -41,6 +43,12 @@ MAX_TASKS_PER_BATCH = 300   # avoid overloading coiled with too many tasks at on
 parser = argparse.ArgumentParser()
 parser.add_argument("batchName")
 parser.add_argument("paramName")
+parser.add_argument(
+    "--bleed-delay",
+    type=int,
+    default=0,
+    help="Seconds to wait between submitting each batch of MAX_TASKS_PER_BATCH tasks (default: 0, i.e. no delay).",
+)
 args = parser.parse_args()
 # %% 
 # --- load params dict
@@ -95,7 +103,8 @@ if os.environ.get("DRY_RUN"):
 
 else:
     all_results = []
-    for i, task_chunk in enumerate(chf.tasklist_to_chunks(task_dicts, MAX_TASKS_PER_BATCH)):
+    task_chunks = list(chf.tasklist_to_chunks(task_dicts, MAX_TASKS_PER_BATCH))
+    for i, task_chunk in enumerate(task_chunks):
         # Submit using map_over_task_var_dicts so each task receives its env vars
         res = coiled.batch.run(
             # command=f"python3 {worker_script}",
@@ -127,4 +136,9 @@ else:
         all_results.append(res)
 
         coiled.batch.status()
+
+        # delay before the next batch submission, if requested
+        if args.bleed_delay and i < len(task_chunks) - 1:
+            print(f"Sleeping {args.bleed_delay}s before next batch...")
+            time.sleep(args.bleed_delay)
 # %%

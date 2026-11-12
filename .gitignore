@@ -99,3 +99,16 @@ scratch/
 
 # Untitled files
 *Untitled*
+
+# Files starting with "test"
+test*
+
+# Figure outputs (notebooks stay tracked)
+figures/*/final/
+figures/*/illustrator/
+figures/*/panels/
+/process/synthesis/figures/
+
+# Run logs
+runlog.md
+runlog*.md
