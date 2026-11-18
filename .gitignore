@@ -112,3 +112,6 @@ figures/*/panels/
 # Run logs
 runlog.md
 runlog*.md
+
+# Zenodo staging
+/zenodo/
